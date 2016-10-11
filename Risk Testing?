@@ -1,5 +1,5 @@
-//Phillip Si
-//Graphics-Asg1: Bouncing Shapes
+//Phillip Si, Josh Holden, and Tony Lee
+//Soccer Game Project
 import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
