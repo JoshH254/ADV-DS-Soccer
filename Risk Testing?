@@ -1,5 +1,8 @@
-//Phillip Si, Josh Holden, and Tony Lee
-//Soccer Game Project
+//Phillip Si, TOny Lee, Josh Holden
+//Soccer Game
+/*
+Added blue team. Still needs goalies, win lines, and maybe intelligent semi-following(change a few degrees per move) when the ball is in their square
+*/ 
 import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
@@ -63,6 +66,9 @@ class BoxOfBalls extends JPanel {
    private ArrayList<RedPlayer> redDef;
    private ArrayList<RedPlayer> redOff;
    private ArrayList<RedPlayer> redMid;
+   private ArrayList<BluePlayer> blueDef;
+   private ArrayList<BluePlayer> blueOff;
+   private ArrayList<BluePlayer> blueMid;
    private Box box;  // The container rectangular box
   
    private DrawCanvas canvas; // Custom canvas for drawing the box/ball
@@ -81,6 +87,9 @@ class BoxOfBalls extends JPanel {
       redDef = new ArrayList(0);
       redOff = new ArrayList(0);
       redMid = new ArrayList(0);
+      blueDef = new ArrayList(0);
+      blueOff = new ArrayList(0);
+      blueMid = new ArrayList(0);
       Random randomize = new Random();
       redSide = new Box(0, 0, 700, 1400, Color.GREEN, Color.WHITE);
       midSide = new Box(700, 0, 700, 1400, Color.GREEN, Color.WHITE);
@@ -108,6 +117,21 @@ class BoxOfBalls extends JPanel {
          speed = (int)(Math.random()*5+10);
          angleInDegree = randomize.nextInt(360);
          redMid.add(new RedPlayer(x, y, radius, speed, angleInDegree));
+         x = randomize.nextInt(canvasWidth/3 - radius * 2 - 20) + radius + 10;
+         y = randomize.nextInt(canvasHeight - radius * 2 - 20) + radius + 10;
+         speed = (int)(Math.random()*5+10);
+         angleInDegree = randomize.nextInt(360);
+         blueMid.add(new BluePlayer(x, y, radius, speed, angleInDegree));
+         x = randomize.nextInt(canvasWidth/3 - radius * 2 - 20) + radius + 10;
+         y = randomize.nextInt(canvasHeight - radius * 2 - 20) + radius + 10;
+         speed = (int)(Math.random()*5+10);
+         angleInDegree = randomize.nextInt(360);
+         blueOff.add(new BluePlayer(x, y, radius, speed, angleInDegree));
+         x = randomize.nextInt(canvasWidth/3 - radius * 2 - 20) + radius + 10;
+         y = randomize.nextInt(canvasHeight - radius * 2 - 20) + radius + 10;
+         speed = (int)(Math.random()*5+10);
+         angleInDegree = randomize.nextInt(360);
+         blueDef.add(new BluePlayer(x, y, radius, speed, angleInDegree));
       }
       // Initialize the Container Box to fill the screen
       box = new Box(0, 0, canvasWidth, canvasHeight, Color.GREEN, Color.WHITE);
@@ -157,20 +181,23 @@ class BoxOfBalls extends JPanel {
       for (int i = 0; i < 3; i++)
       {
          if (Math.pow(redDef.get(i).getX() - balls.getX(), 2) + Math.pow(redDef.get(i).getY() - balls.getY(), 2) <= Math.pow(redDef.get(i).getR()+balls.getR(), 2))
-         {
-            redDef.get(i).kick(balls);               
-         }
+            redDef.get(i).kick(balls); 
          if (Math.pow(redOff.get(i).getX() - balls.getX(), 2) + Math.pow(redOff.get(i).getY() - balls.getY(), 2) <= Math.pow(redOff.get(i).getR()+balls.getR(), 2))
-         {
-            redOff.get(i).kick(balls);               
-         }
+            redOff.get(i).kick(balls);         
          if (Math.pow(redMid.get(i).getX() - balls.getX(), 2) + Math.pow(redMid.get(i).getY() - balls.getY(), 2) <= Math.pow(redMid.get(i).getR()+balls.getR(), 2))
-         {
-            redMid.get(i).kick(balls);               
-         }
+            redMid.get(i).kick(balls);   
+         if (Math.pow(blueOff.get(i).getX() - balls.getX(), 2) + Math.pow(blueOff.get(i).getY() - balls.getY(), 2) <= Math.pow(blueOff.get(i).getR()+balls.getR(), 2))
+            blueOff.get(i).kick(balls);    
+         if (Math.pow(blueMid.get(i).getX() - balls.getX(), 2) + Math.pow(blueMid.get(i).getY() - balls.getY(), 2) <= Math.pow(blueMid.get(i).getR()+balls.getR(), 2))
+            blueMid.get(i).kick(balls);    
+         if (Math.pow(blueDef.get(i).getX() - balls.getX(), 2) + Math.pow(blueDef.get(i).getY() - balls.getY(), 2) <= Math.pow(blueDef.get(i).getR()+balls.getR(), 2))
+            blueDef.get(i).kick(balls);   
          redDef.get(i).move(redSide);
          redOff.get(i).move(blueSide);
          redMid.get(i).move(midSide);
+         blueOff.get(i).move(redSide);
+         blueDef.get(i).move(blueSide);
+         blueMid.get(i).move(midSide);
       }
    }
    
@@ -186,6 +213,9 @@ class BoxOfBalls extends JPanel {
             redDef.get(i).draw(g);
             redOff.get(i).draw(g);
             redMid.get(i).draw(g);
+            blueDef.get(i).draw(g);
+            blueOff.get(i).draw(g);
+            blueMid.get(i).draw(g);
          }
       }
         @Override
@@ -314,6 +344,63 @@ class RedPlayer
    public void kick(Ball ball)
    {
       int changeAngle = (int)(Math.pow(-1, ((int)(Math.random()*2)))*(int)(Math.random()*91));
+      ball.getKicked(changeAngle, this.x, this.y);
+   }
+}
+class BluePlayer
+{
+   double x, y;
+   double speedX, speedY; 
+   double radius;           
+   private Color color; 
+   double speedFactor; 
+  
+   public BluePlayer(double x, double y, double radius, double speed, double angleInDegree) {
+      this.x = x;
+      this.y = y;
+      // Convert (speed, angle) to (x, y), with y-axis inverted
+      this.speedX = (double)(speed * Math.cos(Math.toRadians(angleInDegree)));
+      this.speedY = (double)(-speed * (double)Math.sin(Math.toRadians(angleInDegree)));
+      this.radius = radius;
+      this.color = Color.BLUE;
+      this.speedFactor = speed;
+   }
+   public void draw(Graphics g) {
+      g.setColor(color);
+      g.fillOval((int)(x - radius), (int)(y - radius), (int)(2 * radius), (int)(2 * radius));
+   }
+   public double getX() {return x;}
+   public double getY() {return y;}
+   public double getR() {return radius;}
+   public double getSpeed() {return speedFactor;}
+   public void move(Box box) {
+      double ballMinX = box.minX + radius;
+      double ballMinY = box.minY + radius;
+      double ballMaxX = box.maxX - radius;
+      double ballMaxY = box.maxY - radius;
+   
+      // Calculate new position
+      x += speedX;
+      y += speedY;
+      if (x < ballMinX) {
+         speedX = -speedX; // Reflect along normal
+         x = ballMinX;     
+      } else if (x > ballMaxX) {
+      
+         speedX = -speedX;
+         x = ballMaxX;
+      }
+      if (y < ballMinY) {
+         speedY = -speedY;
+         y = ballMinY;
+      } else if (y > ballMaxY) {
+         speedY = -speedY;
+         y = ballMaxY;
+      }  
+   }
+   public void kick(Ball ball)
+   {
+      int changeAngle = 180+(int)(Math.pow(-1, ((int)(Math.random()*2)))*(int)(Math.random()*91));
       ball.getKicked(changeAngle, this.x, this.y);
    }
 }
