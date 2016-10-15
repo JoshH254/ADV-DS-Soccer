@@ -1,8 +1,5 @@
-//Phillip Si, TOny Lee, Josh Holden
+//Phillip Si, Tony Lee, Josh Holden
 //Soccer Game
-/*
-Added blue team. Still needs goalies, win lines, and maybe intelligent semi-following(change a few degrees per move) when the ball is in their square
-*/ 
 import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
@@ -140,7 +137,6 @@ class BoxOfBalls extends JPanel {
       canvas = new DrawCanvas();
       this.setLayout(new BorderLayout());
       this.add(canvas, BorderLayout.CENTER);
-      
       // Handling window resize.
       this.addComponentListener(new ComponentAdapter() {
          @Override
@@ -199,6 +195,8 @@ class BoxOfBalls extends JPanel {
          blueDef.get(i).move(blueSide);
          blueMid.get(i).move(midSide);
       }
+      //Intelligent Follow to make the game more exciting
+      
    }
    
    class DrawCanvas extends JPanel {
@@ -290,22 +288,20 @@ class Ball {
       this.speedY = (double)(this.speedFactor * Math.sin(Math.toRadians(angle)));
    } 
 }
-class RedPlayer
+class Player
 {
-   double x, y;
-   double speedX, speedY; 
-   double radius;           
-   private Color color; 
+   private double x, y;
+   private double speedX, speedY; 
+   private double radius;           
+   protected Color color; 
    double speedFactor; 
-  
-   public RedPlayer(double x, double y, double radius, double speed, double angleInDegree) {
+   public Player(double x, double y, double radius, double speed, double angleInDegree) {
       this.x = x;
       this.y = y;
       // Convert (speed, angle) to (x, y), with y-axis inverted
       this.speedX = (double)(speed * Math.cos(Math.toRadians(angleInDegree)));
       this.speedY = (double)(-speed * (double)Math.sin(Math.toRadians(angleInDegree)));
       this.radius = radius;
-      this.color = Color.RED;
       this.speedFactor = speed;
    }
    public void draw(Graphics g) {
@@ -340,67 +336,32 @@ class RedPlayer
          speedY = -speedY;
          y = ballMaxY;
       }  
+   }
+
+}
+
+class RedPlayer extends Player
+{  
+   public RedPlayer(double x, double y, double radius, double speed, double angleInDegree) {
+      super(x, y, radius, speed, angleInDegree);
+      this.color = Color.RED;
    }
    public void kick(Ball ball)
    {
       int changeAngle = (int)(Math.pow(-1, ((int)(Math.random()*2)))*(int)(Math.random()*91));
-      ball.getKicked(changeAngle, this.x, this.y);
+      ball.getKicked(changeAngle, this.getX(), this.getY());
    }
 }
-class BluePlayer
+class BluePlayer extends Player
 {
-   double x, y;
-   double speedX, speedY; 
-   double radius;           
-   private Color color; 
-   double speedFactor; 
   
    public BluePlayer(double x, double y, double radius, double speed, double angleInDegree) {
-      this.x = x;
-      this.y = y;
-      // Convert (speed, angle) to (x, y), with y-axis inverted
-      this.speedX = (double)(speed * Math.cos(Math.toRadians(angleInDegree)));
-      this.speedY = (double)(-speed * (double)Math.sin(Math.toRadians(angleInDegree)));
-      this.radius = radius;
+      super(x, y, radius, speed, angleInDegree);
       this.color = Color.BLUE;
-      this.speedFactor = speed;
-   }
-   public void draw(Graphics g) {
-      g.setColor(color);
-      g.fillOval((int)(x - radius), (int)(y - radius), (int)(2 * radius), (int)(2 * radius));
-   }
-   public double getX() {return x;}
-   public double getY() {return y;}
-   public double getR() {return radius;}
-   public double getSpeed() {return speedFactor;}
-   public void move(Box box) {
-      double ballMinX = box.minX + radius;
-      double ballMinY = box.minY + radius;
-      double ballMaxX = box.maxX - radius;
-      double ballMaxY = box.maxY - radius;
-   
-      // Calculate new position
-      x += speedX;
-      y += speedY;
-      if (x < ballMinX) {
-         speedX = -speedX; // Reflect along normal
-         x = ballMinX;     
-      } else if (x > ballMaxX) {
-      
-         speedX = -speedX;
-         x = ballMaxX;
-      }
-      if (y < ballMinY) {
-         speedY = -speedY;
-         y = ballMinY;
-      } else if (y > ballMaxY) {
-         speedY = -speedY;
-         y = ballMaxY;
-      }  
    }
    public void kick(Ball ball)
    {
       int changeAngle = 180+(int)(Math.pow(-1, ((int)(Math.random()*2)))*(int)(Math.random()*91));
-      ball.getKicked(changeAngle, this.x, this.y);
+      ball.getKicked(changeAngle, this.getX(), this.getY());
    }
 }
