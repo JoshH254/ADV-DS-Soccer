@@ -1,4 +1,4 @@
-//Josh Holden
+//Phillip Si, Josh Holden, Tony Lee
 //Graphics-Asg1: Bouncing Shapes
 
 import java.awt.*;
