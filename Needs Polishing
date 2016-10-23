@@ -212,9 +212,15 @@ class BoxOfBalls extends JPanel {
    public void gameUpdate(){
       int win = balls.move(box);
       if (win == 1)
-         System.out.println("blue wins");
+      {
+         System.out.println("Blue wins!");
+         balls.scored();
+      }
       if (win == -1)
-         System.out.println("red wins");
+      {
+         System.out.println("Red wins!");
+         balls.scored();
+      }
       for (int i = 0; i < 3; i++)
       {
          //checks the position of red players and the game ball to determine if the ball should be kicked
@@ -336,7 +342,14 @@ class Ball {
    public double getY() {return y;}
    public double getR() {return radius;}
    public double getSpeed() {return speedFactor;}
-      
+   public void setSpeed(double speed) {speedFactor = speed;} 
+   public void scored()
+   {
+      x = 1050;
+      y = 700;
+      speedX = 0;
+      speedY = 0;
+   } 
    //one iteration of move
    public int move(Box box) {
       double ballMinX = box.minX + radius;
@@ -434,7 +447,8 @@ class RedPlayer extends Player
    }
    public void kick(Ball ball)
    {
-      int changeAngle = (int)(Math.pow(-1, ((int)(Math.random()*2)))*(int)(Math.random()*31));
+      ball.setSpeed(15);
+      int changeAngle = (int)(Math.pow(-1, ((int)(Math.random()*2)))*(int)(Math.random()*61));
       ball.getKicked(changeAngle, this.getX(), this.getY());
    }
 }
@@ -446,7 +460,8 @@ class RedGoalie extends RedPlayer
    }
    public void kick(Ball ball)
    {
-      int changeAngle = (int)(Math.pow(-1, ((int)(Math.random()*2)))*(int)(Math.random()*16));
+      int changeAngle = (int)(Math.pow(-1, ((int)(Math.random()*2)))*(int)(Math.random()*31));
+      ball.setSpeed(25);
       ball.getKicked(changeAngle, this.getX(), this.getY());
    }
 }
@@ -460,7 +475,8 @@ class BluePlayer extends Player
    }
    public void kick(Ball ball)
    {
-      int changeAngle = 180+(int)(Math.pow(-1, ((int)(Math.random()*2)))*(int)(Math.random()*31));
+      int changeAngle = 180+(int)(Math.pow(-1, ((int)(Math.random()*2)))*(int)(Math.random()*61));
+      ball.setSpeed(15);
       ball.getKicked(changeAngle, this.getX(), this.getY());
    }
 }
@@ -472,7 +488,8 @@ class BlueGoalie extends BluePlayer
    }
    public void kick(Ball ball)
    {
-      int changeAngle = 180+(int)(Math.pow(-1, ((int)(Math.random()*2)))*(int)(Math.random()*16));
+      int changeAngle = 180+(int)(Math.pow(-1, ((int)(Math.random()*2)))*(int)(Math.random()*31));
+      ball.setSpeed(25);
       ball.getKicked(changeAngle, this.getX(), this.getY());
    }
 }
