@@ -73,7 +73,6 @@ class BoxOfBalls extends JPanel {
    private ArrayList<BluePlayer> blueMid;
    private ArrayList<BluePlayer> blueGoalie;
    private Box box;  // The container rectangular box
-  
    private DrawCanvas canvas; // Custom canvas for drawing the box/ball
    private int canvasWidth;
    private int canvasHeight;
@@ -154,13 +153,13 @@ class BoxOfBalls extends JPanel {
       }
       x = randomize.nextInt(canvasWidth/3 - radius * 2 - 20) + radius + 10;
       y = randomize.nextInt(canvasHeight - radius * 2 - 20) + radius + 10;
-      speed = (int)(Math.random()*5+10);
+      speed = (int)(Math.random()*5+15);
       angleInDegree = randomize.nextInt(360);
       redGoalie.add(new RedGoalie(x, y, radius, speed, angleInDegree));
       
       x = randomize.nextInt(canvasWidth/3 - radius * 2 - 20) + radius + 10;
       y = randomize.nextInt(canvasHeight - radius * 2 - 20) + radius + 10;
-      speed = (int)(Math.random()*5+10);
+      speed = (int)(Math.random()*5+15);
       angleInDegree = randomize.nextInt(360);
       blueGoalie.add(new BlueGoalie(x, y, radius, speed, angleInDegree));
       
@@ -227,30 +226,31 @@ class BoxOfBalls extends JPanel {
          if (Math.pow(redDef.get(i).getX() - balls.getX(), 2) + Math.pow(redDef.get(i).getY() - balls.getY(), 2) <= Math.pow(redDef.get(i).getR()+balls.getR(), 2))
             redDef.get(i).kick(balls); 
          if (Math.pow(redOff.get(i).getX() - balls.getX(), 2) + Math.pow(redOff.get(i).getY() - balls.getY(), 2) <= Math.pow(redOff.get(i).getR()+balls.getR(), 2))
-            redOff.get(i).kick(balls);         
+            redOff.get(i).smartKick(balls);         
          if (Math.pow(redMid.get(i).getX() - balls.getX(), 2) + Math.pow(redMid.get(i).getY() - balls.getY(), 2) <= Math.pow(redMid.get(i).getR()+balls.getR(), 2))
             redMid.get(i).kick(balls);   
          //checks the position of blue players and the game ball to determine if the ball should be kicked
          if (Math.pow(blueOff.get(i).getX() - balls.getX(), 2) + Math.pow(blueOff.get(i).getY() - balls.getY(), 2) <= Math.pow(blueOff.get(i).getR()+balls.getR(), 2))
-            blueOff.get(i).kick(balls);    
+            blueOff.get(i).smartKick(balls);    
          if (Math.pow(blueMid.get(i).getX() - balls.getX(), 2) + Math.pow(blueMid.get(i).getY() - balls.getY(), 2) <= Math.pow(blueMid.get(i).getR()+balls.getR(), 2))
             blueMid.get(i).kick(balls);    
          if (Math.pow(blueDef.get(i).getX() - balls.getX(), 2) + Math.pow(blueDef.get(i).getY() - balls.getY(), 2) <= Math.pow(blueDef.get(i).getR()+balls.getR(), 2))
             blueDef.get(i).kick(balls);    
-         redDef.get(i).move(redSide);
-         redOff.get(i).move(blueSide);
-         redMid.get(i).move(midSide);
-         blueOff.get(i).move(redSide);
-         blueDef.get(i).move(blueSide);
-         blueMid.get(i).move(midSide);
+         redDef.get(i).move(redSide, balls);
+         redOff.get(i).move(blueSide, balls);
+         redMid.get(i).move(midSide, balls);
+         blueOff.get(i).move(redSide, balls);
+         blueDef.get(i).move(blueSide, balls);
+         blueMid.get(i).move(midSide, balls);
       }
-      //Goalie checks kick and move functions
+      redGoalie.get(0).smartFollow(redSide, balls);
+      blueGoalie.get(0).smartFollow(blueSide, balls);
       if (Math.pow(redGoalie.get(0).getX() - balls.getX(), 2) + Math.pow(redGoalie.get(0).getY() - balls.getY(), 2) <= Math.pow(redGoalie.get(0).getR()+balls.getR(), 2))
          redGoalie.get(0).kick(balls); 
       if (Math.pow(blueGoalie.get(0).getX() - balls.getX(), 2) + Math.pow(blueGoalie.get(0).getY() - balls.getY(), 2) <= Math.pow(blueGoalie.get(0).getR()+balls.getR(), 2))
          blueGoalie.get(0).kick(balls);
-      redGoalie.get(0).move(redGoalieSide); // need to create goalie sides
-      blueGoalie.get(0).move(blueGoalieSide); // need to create goalie sides
+      redGoalie.get(0).move(redGoalieSide, balls); // need to create goalie sides
+      blueGoalie.get(0).move(blueGoalieSide, balls); // need to create goalie sides
       //Intelligent Follow to make the game more exciting
       
    }
@@ -401,7 +401,7 @@ class Player
       this.y = y;
       // Convert (speed, angle) to (x, y), with y-axis inverted
       this.speedX = (double)(speed * Math.cos(Math.toRadians(angleInDegree)));
-      this.speedY = (double)(-speed * (double)Math.sin(Math.toRadians(angleInDegree)));
+      this.speedY = (double)(-speed * Math.sin(Math.toRadians(angleInDegree)));
       this.radius = radius;
       this.speedFactor = speed;
    }
@@ -413,7 +413,25 @@ class Player
    public double getY() {return y;}
    public double getR() {return radius;}
    public double getSpeed() {return speedFactor;}
-   public void move(Box box) {
+   public void setColor(Color colors) {color = colors;}
+   public void smartFollow(Box box, Ball ball)
+   {
+      if ((ball.getX()>box.minX)&&(ball.getY()>box.minY)&&(ball.getX()<box.maxX)&&(ball.getY()<box.maxY))
+      {
+         double dX = (ball.getX()-x);
+         double dY = (y-ball.getY());
+         double smartAngle = Math.toDegrees(Math.atan((dY/dX)));
+         if (ball.getX()<this.x)
+            smartAngle = smartAngle+180;
+         double currentAngle = Math.toDegrees(Math.atan(this.speedX/this.speedY));
+         if (this.speedX < 0)
+            currentAngle = currentAngle+180;
+         currentAngle+= (smartAngle-currentAngle);
+         this.speedX = (double)(speedFactor * Math.cos(Math.toRadians(currentAngle)));
+         this.speedY = (double)(-speedFactor * Math.sin(Math.toRadians(currentAngle)));
+      }
+   } 
+   public void move(Box box, Ball ball) {
       double ballMinX = box.minX + radius;
       double ballMinY = box.minY + radius;
       double ballMaxX = box.maxX - radius;
@@ -451,6 +469,14 @@ class RedPlayer extends Player
       int changeAngle = (int)(Math.pow(-1, ((int)(Math.random()*2)))*(int)(Math.random()*61));
       ball.getKicked(changeAngle, this.getX(), this.getY());
    }
+   public void smartKick(Ball ball)
+   {
+      ball.setSpeed(25);
+      double dX = (2100-this.getX());
+      double dY = (this.getY()-550-(int)(Math.random()*300));
+      int changeAngle = -(int)(Math.toDegrees(Math.atan(dY/dX)));
+      ball.getKicked(changeAngle, this.getX(), this.getY());
+   }
 }
 class RedGoalie extends RedPlayer
 {
@@ -477,6 +503,14 @@ class BluePlayer extends Player
    {
       int changeAngle = 180+(int)(Math.pow(-1, ((int)(Math.random()*2)))*(int)(Math.random()*61));
       ball.setSpeed(15);
+      ball.getKicked(changeAngle, this.getX(), this.getY());
+   }
+   public void smartKick(Ball ball)
+   {
+      ball.setSpeed(25);
+      double dX = -(this.getX());
+      double dY = (this.getY()-550-(int)(Math.random()*300));
+      int changeAngle = -(int)(Math.toDegrees(Math.atan(dY/dX)))+180;
       ball.getKicked(changeAngle, this.getX(), this.getY());
    }
 }
